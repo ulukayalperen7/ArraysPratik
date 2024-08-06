@@ -5,8 +5,22 @@ import java.util.Scanner;
 public class Game {
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
         System.out.println("Mayın Tarlasına Hoşgeldiniz !");
-        MineSweeper ms = new MineSweeper(10, 10);
+        int row, column;
+        do {
+            System.out.print("Satır sayısını giriniz (min 2): ");
+            row = scanner.nextInt();
+            System.out.print("Sütun sayısını giriniz (min 2): ");
+            column = scanner.nextInt();
+
+            if (row < 2 || column < 2) {
+                System.out.println("Satır ve sütun sayısı en az 2 x 2 olmalıdır. Lütfen tekrar giriniz.");
+            }
+        } while (row < 2 || column < 2);
+
+        MineSweeper ms = new MineSweeper(row, column);
         ms.displayGame(ms.arrayCreator());
     }
 }
@@ -55,42 +69,76 @@ class MineSweeper {
     public void displayGame(String[][] str) {
 
         String[][] newStr = new String[str.length][str[0].length];
+        boolean[][] revealed = new boolean[str.length][str[0].length]; // açılanlar
+        int numberOfBomb = (row * column) / 4;
+        int cellRevealed = 0;
 
         for (int i = 0; i < str.length; i++) {
             for (int j = 0; j < str[0].length; j++) {
                 newStr[i][j] = "- ";
+                revealed[i][j] = false;
             }
         }
 
         int chooseRow;
         int chooseCol;
-        int counter = 0;
+        int counter;
+        boolean isOver = false;
+
         do {
 
-            for (String[] strings : newStr) {
-                System.out.println(Arrays.toString(strings));
-            }
+            print(newStr);
+
             System.out.print("Satır giriniz: ");
             chooseRow = scanner.nextInt();
             System.out.print("Sütun giriniz: ");
             chooseCol = scanner.nextInt();
-            System.out.println("===========================");
-            if (str[chooseRow][chooseCol].equals("* ")) {
-                System.out.println("Game Over!");
-                return;
-            }
 
-            for (int i = chooseRow - 1; i < chooseRow + 2; i++) {
-                for (int j = chooseCol - 1; j < chooseCol + 2; j++) {
-                    if (str[i][j].equals("* ") && i >= 0 && j >= 0 && j <= column - 1 && i <= row - 1) {
-                        counter++;
+            if (chooseRow < 0 || chooseRow >= row || chooseCol < 0 || chooseCol >= column) {
+                System.out.println("Lütfen geçerli bir koordinat giriniz :");
+                continue;
+            }
+            if (revealed[chooseRow][chooseCol]) {
+                System.out.println("Bu koordinat daha önce seçildi, başka bir kordinat giriniz.");
+                continue;
+            }
+            if (str[chooseRow][chooseCol].equals("* ")) {
+                print(str);
+                System.out.println("Game Over !");
+                isOver = true;
+                continue;
+            }
+            revealed[chooseRow][chooseCol] = true;
+            counter = 0;
+            for (int i = chooseRow - 1; i <= chooseRow + 1; i++) {
+                for (int j = chooseCol - 1; j <= chooseCol + 1; j++) {
+                    if (i >= 0 && j >= 0 && j < column && i < row) {
+                        if (str[i][j].equals("* ")) {
+                            counter++;
+                        }
                     }
                 }
             }
-            newStr[chooseRow][chooseCol] = counter + "";
+            newStr[chooseRow][chooseCol] = counter + " ";
+            cellRevealed++;
 
-        } while (!str[chooseRow][chooseCol].equals("* "));
+            if (cellRevealed == (row * column) - numberOfBomb) {
+                print(str);
+                System.out.println("Tebrikler, oyunu kazandınız!");
+                isOver = true;
+            }
 
+            System.out.println("===========================");
+
+        } while (!isOver);
+
+    }
+
+    private void print(String[][] board) {
+        for (String[] strings : board) {
+            System.out.println(Arrays.toString(strings));
+        }
+        System.out.println();
     }
 
 }
